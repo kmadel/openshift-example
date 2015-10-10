@@ -36,7 +36,7 @@ import com.saucelabs.junit.SauceOnDemandTestWatcher;
  * The test also includes the {@link SauceOnDemandTestWatcher} which will invoke
  * the Sauce REST API to mark the test as passed or failed.
  * 
- * @author Ross Rowe
+ * @author Andy Pemberton
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 // @RunWith(Parameterized.class)
