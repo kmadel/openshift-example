@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import java.net.URL;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -152,6 +153,7 @@ public class SampleSauceIT implements SauceOnDemandSessionIdProvider {
 		capabilities.setCapability(CapabilityType.VERSION, version);
 		capabilities.setCapability(CapabilityType.PLATFORM, "VISTA");
 		capabilities.setCapability("os", os);
+		capabilities.setCapability("tunnel-identifier", System.getenv("TUNNEL_IDENTIFIER"));
 		
 		capabilities.setCapability("name", "Mobile Deposit: " + name.getMethodName());
 		
