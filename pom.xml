@@ -74,6 +74,7 @@
 					<groups>com.cloudbees.examples.bank.demo.UnitTest</groups>
 				</configuration>
 			</plugin>
+			<!-- 
 			<plugin>
 				<groupId>com.saucelabs.maven.plugin</groupId>
 				<artifactId>sauce-connect-plugin</artifactId>
@@ -99,6 +100,7 @@
 					</execution>
 				</executions>
 			</plugin>
+			-->
 		</plugins>
 	</build>
 	<repositories>
