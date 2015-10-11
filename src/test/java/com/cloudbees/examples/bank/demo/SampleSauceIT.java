@@ -177,7 +177,7 @@ public class SampleSauceIT implements SauceOnDemandSessionIdProvider {
 
 	@Test
 	public void hasMaskedAccountNumber() throws Exception {
-		driver.get("http://localhost:" + port + "deposit"); // TODO parameterize
+		driver.get("http://localhost:" + port + "/deposit"); // TODO parameterize
 		WebElement accountNumber = driver.findElement(By
 				.className("account-number"));
 		assertTrue("Account Number must end and only contain 4 digits!",
