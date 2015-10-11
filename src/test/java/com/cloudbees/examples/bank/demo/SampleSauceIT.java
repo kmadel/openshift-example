@@ -143,16 +143,16 @@ public class SampleSauceIT implements SauceOnDemandSessionIdProvider {
 	 */
 	@Before
 	public void setUp() throws Exception {
-		this.browser = "safari";
-		this.version = "6";
-		this.os = "OSX 10.8";
+		//this.browser = "safari";
+		//this.version = "6";
+		//this.os = "OSX 10.8";
 
 		DesiredCapabilities capabilities = new DesiredCapabilities();
-		capabilities.setCapability(CapabilityType.BROWSER_NAME, browser);
-		if (version != null) {
-			capabilities.setCapability(CapabilityType.VERSION, version);
-		}
-		capabilities.setCapability(CapabilityType.PLATFORM, os);
+		// capabilities.setCapability(CapabilityType.BROWSER_NAME, browser);
+		//if (version != null) {
+		//	capabilities.setCapability(CapabilityType.VERSION, version);
+		//}
+		//capabilities.setCapability(CapabilityType.PLATFORM, os);
 		capabilities.setCapability("name", "Mobile Deposit: " + name.getMethodName());
 		this.driver = new RemoteWebDriver(new URL("http://"
 				+ authentication.getUsername() + ":"
