@@ -6,6 +6,7 @@ def OS_CREDS = 'mobile-openshift-credentials'
 stage 'development'
 
 	node{
+		checkout scm
 		sh 'mvn clean package'
 		wrap([$class: 'OpenShiftBuildWrapper', url: OS_URL, credentialsId: OS_CREDS, insecure: true]) {
             sh """
