@@ -1,8 +1,5 @@
 #!groovy
 
-def OS_URL = 'https://cloudbees.openshift.com/'
-def OS_CREDS = 'mobile-openshift-credentials'
-
 stage 'development'
 
 	node{
