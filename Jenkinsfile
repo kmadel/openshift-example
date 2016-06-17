@@ -10,7 +10,7 @@ stage 'development'
 		sh 'mvn clean package'
 		wrap([$class: 'OpenShiftBuildWrapper', url: OS_URL, credentialsId: OS_CREDS, insecure: true]) {
             sh """
-            	oc help
+            	oc project mobile-development
             """
     	}
 	
