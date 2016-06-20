@@ -1,5 +1,4 @@
 #!groovy
-
 import groovy.json.JsonSlurper
 
 /**
@@ -11,36 +10,47 @@ import groovy.json.JsonSlurper
 stage 'development'
 
 	node{
-		git 'https://github.com/apemberton/mobile-deposit-ui.git'
+		checkout scm
 		sh 'mvn clean package clean'
 		wrap([$class: 'OpenShiftBuildWrapper', url: OS_URL, credentialsId: OS_CREDS, insecure: true]) {
             def project = oc('project mobile-development -q')
             def bc = oc('get bc -o json')
             
-            //TODO find just the mobile-deposit-ui build config
+            //TODO perhaps find just the mobile-deposit-ui build config
             if(!bc.items) {
                 oc('new-app --name=mobile-deposit-ui jboss-webserver30-tomcat8-openshift~https://github.com/apemberton/mobile-deposit-ui.git#openshift')
             } else {
              	//TODO consider verbose parameter for wait vs follow
                 oc('start-build mobile-deposit-ui --from-dir=. --follow')
             }
-            
+            //oc scale
+            //oc expose 
     	}
 	}
-
+	
+	checkpoint 'development-complete'
 	input 'do you want to deploy this build to test?'
 		
 stage 'test'
 	node{
-		// sh 'oc tag :test'
-		// oc get dc
-		// if !dc
-			// oc new-app  $DEVEL_PROJ_NAME/${IS_NAME}:test
-		//oc scale
-		
-		//TODO maybe run some selenium/saucelabs tests against test?		
+		wrap([$class: 'OpenShiftBuildWrapper', url: OS_URL, credentialsId: OS_CREDS, insecure: true]) {
+            def project = oc('project mobile-development -q')
+            def is = oc('get is -o json')
+            def image = is.items[0].status.tags[0].items[0].dockerImageReference
+            def isName = is.items[0].metadata.name
+            
+            oc("tag $image mobile-development/$isName:test")
+
+            project = oc('project mobile-test -q')
+            def dc = oc('get dc -o json')
+            if(!dc.items){
+                oc("new-app mobile-development/$isName:test")
+            }
+			//oc scale
+    	}
 	}
 	
+	checkpoint 'test-complete'
 	input 'do you want to deploy this build to production?'
 	
 stage 'production'
