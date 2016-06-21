@@ -18,6 +18,7 @@ stage 'development'
             
             //TODO perhaps find just the mobile-deposit-ui build config
             if(!bc.items) {
+            	//TODO decide if new-app supports blocking or returns immediately (then insert polling hack)
                 oc('new-app --name=mobile-deposit-ui jboss-webserver30-tomcat8-openshift~https://github.com/apemberton/mobile-deposit-ui.git#openshift')
             } else {
                 //TODO consider verbose parameter for wait vs follow
@@ -36,10 +37,9 @@ stage 'test'
         wrap([$class: 'OpenShiftBuildWrapper', url: OS_URL, credentialsId: OS_CREDS, insecure: true]) {
             def project = oc('project mobile-development -q')
             def is = oc('get is -o json')
-            def image = is.items[0].status.tags[0].items[0].dockerImageReference
             def isName = is.items[0].metadata.name
             
-            oc("tag $image mobile-development/$isName:test")
+            oc("tag $isName:latest $isName:test")
 
             project = oc('project mobile-test -q')
             def dc = oc('get dc -o json')
