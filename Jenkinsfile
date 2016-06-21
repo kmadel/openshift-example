@@ -3,7 +3,8 @@ import groovy.json.JsonSlurper
 
 /**
 * parameters:
-* - OS_CREDS
+* - OS_CREDS_DEV
+* - OS_CREDS_TEST
 * - OS_URL
 */
 
@@ -12,20 +13,19 @@ stage 'development'
     node{
         checkout scm
         sh 'mvn clean package clean'
-        wrap([$class: 'OpenShiftBuildWrapper', url: OS_URL, credentialsId: OS_CREDS, insecure: true]) {
+        wrap([$class: 'OpenShiftBuildWrapper', url: OS_URL, credentialsId: OS_CREDS_DEV, insecure: true]) {
             def project = oc('project mobile-development -q')
             def bc = oc('get bc -o json')
             
-            //TODO perhaps find just the mobile-deposit-ui build config
             if(!bc.items) {
             	//TODO decide if new-app supports blocking or returns immediately (then insert polling hack)
-                oc('new-app --name=mobile-deposit-ui jboss-webserver30-tomcat8-openshift~https://github.com/apemberton/mobile-deposit-ui.git#openshift')
+                oc("new-app --name=mobile-deposit-ui --code='.' --image-stream=jboss-webserver30-tomcat8-openshift")
+                oc('expose service mobile-deposit-ui')
             } else {
-                //TODO consider verbose parameter for wait vs follow
+            	//TODO consider verbose parameter for wait vs follow
                 oc('start-build mobile-deposit-ui --from-dir=. --follow')
             }
             //oc scale
-            //oc expose 
          }
     }
     
@@ -34,10 +34,10 @@ stage 'development'
 
 stage 'test'
      node{
-        wrap([$class: 'OpenShiftBuildWrapper', url: OS_URL, credentialsId: OS_CREDS, insecure: true]) {
+        wrap([$class: 'OpenShiftBuildWrapper', url: OS_URL, credentialsId: OS_CREDS_TEST, insecure: true]) {
             def project = oc('project mobile-development -q')
             def is = oc('get is -o json')
-            def isName = is.items[0].metadata.name
+            def isName = is?.items[0].metadata.name
             
             oc("tag $isName:latest $isName:test")
 
@@ -45,8 +45,11 @@ stage 'test'
             def dc = oc('get dc -o json')
             if(!dc.items){
                 oc("new-app mobile-development/$isName:test")
+                oc('expose service mobile-deposit-ui')
             }
             //oc scale
+            
+            //TODO maybe run some selenium/saucelabs tests against test?
         }
     }
     
@@ -65,10 +68,10 @@ stage 'production'
     
     
 def oc(cmd){
-    sh "oc $cmd | tee output"
-    def output = readFile 'output'
-    if(cmd.endsWith('-o json')){
-       output = new JsonSlurper().parseText(output)
-    }
+	sh "oc $cmd 2>&1 | tee output"
+	def output = readFile 'output'
+	if(cmd.endsWith('-o json')){
+	    output = new JsonSlurper().parseText(output)
+	}
     return output
 }
