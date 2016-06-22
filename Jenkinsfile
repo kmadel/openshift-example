@@ -3,18 +3,8 @@ import groovy.json.JsonSlurper
 
 /**
 * The following parameters are used in this pipeline (thus available as groovy variables via Jenkins job parameters):
-* 
-* - OS_URL - URL for your OpenShift v3 API instance
-* - OS_CREDS_DEV - credentials for your development project, either user name / password or OAuth token
-* - OS_CREDS_TEST - credentials for your test project
-* - OS_CREDS_PROD - credentials for your production project
-* - OS_BUILD_LOG - how to handle output of start-build command, either 'wait' or 'follow'
-*/
-
+* /
 properties([
-   [$class: 'BuildDiscarderProperty',
-      strategy: [$class: 'LogRotator', numToKeepStr: '10', artifactNumToKeepStr: '10']
-   ],
    [$class: 'ParametersDefinitionProperty', 
        parameterDefinitions: [
            [name: 'OS_URL', $class: 'StringParameterDefinition', defaultValue: 'https://api.cloudbees.openshift.com/', description: 'URL for your OpenShift v3 API instance'], 
@@ -23,6 +13,9 @@ properties([
            [name: 'OS_CREDS_PROD', $class: 'CredentialsParameterDefinition', credentialType: 'com.cloudbees.plugins.credentials.common.StandardCredentials', defaultValue: '', description: 'credentials for your production project'], 
            [name: 'OS_BUILD_LOG', $class: 'ChoiceParameterDefinition', choices: 'follow\nwait', description: 'how to handle output of start-build command, either wait or follow']
         ]
+   ],
+   [$class: 'BuildDiscarderProperty',
+      strategy: [$class: 'LogRotator', numToKeepStr: '10', artifactNumToKeepStr: '10']
    ]
 ])
 
@@ -90,7 +83,6 @@ stage name:'deploy[test]', concurrency:1
                 wait('app=mobile-deposit-ui', 5, 'MINUTES')
                 oc('expose service mobile-deposit-ui')
             }
-            //TODO may need to monitor and wait for the build here
         }
     }
     
@@ -114,7 +106,7 @@ stage name:'deploy[production]', concurrency:1
             def is = oc('get is -o json')
             def image = is?.items[0].metadata.name
             
-            oc("tag $image:test $production")
+            oc("tag $image:test $image:production")
 
             project = oc('project mobile-production -q')
             def dc = oc('get dc -o json')
@@ -123,7 +115,6 @@ stage name:'deploy[production]', concurrency:1
                 wait('app=mobile-deposit-ui', 5, 'MINUTES')
                 oc('expose service mobile-deposit-ui')
             }
-            //TODO may need to monitor and wait for the build here
         }
     }
 
