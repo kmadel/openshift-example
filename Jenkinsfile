@@ -15,7 +15,6 @@ stage 'build'
     node{
         checkout scm
         sh 'mvn -DskipTests clean package'
-        step([$class: 'JUnitResultArchiver', testResults: '**/target/surefire-reports/TEST-*.xml'])
         stash name: 'source', includes: '**', excludes: 'target/*'
         archive includes: 'target/*.war'
     }
@@ -25,6 +24,7 @@ stage 'test[unit-&-quality]'
         node {
             unstash 'source'
             sh 'mvn test'
+            step([$class: 'JUnitResultArchiver', testResults: '**/target/surefire-reports/TEST-*.xml'])
         }
     }, 'quality-test': {
         node {
@@ -73,7 +73,11 @@ stage 'deploy[test]'
     }
     
 stage 'test[functional]'
-    //TODO maybe run some selenium/saucelabs tests against test?
+    node {
+        unstash 'source'
+        sh 'mvn verify' //TODO pass URL to test server
+        step([$class: 'JUnitResultArchiver', testResults: '**/target/failsafe-reports/TEST-*.xml'])
+    }
     checkpoint 'test[functional]-complete' 
     
 stage 'deploy[production]'
