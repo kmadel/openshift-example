@@ -99,13 +99,6 @@
 					<groups>com.cloudbees.examples.bank.demo.categories.UnitTest</groups>
 				</configuration>
 			</plugin>
-			<!-- <plugin> <groupId>com.saucelabs.maven.plugin</groupId> <artifactId>sauce-connect-plugin</artifactId> 
-				<version>2.1.13</version> <configuration> <sauceUsername>cb_cloudbees-sa</sauceUsername> 
-				<sauceAccessKey>0ce882ef-06c4-4439-8b50-09027e4dd6d7</sauceAccessKey> <port>4445</port> 
-				</configuration> <executions> <execution> <id>start-sauceconnct</id> <phase>pre-integration-test</phase> 
-				<goals> <goal>start-sauceconnect</goal> </goals> </execution> <execution> 
-				<id>stop-sauceconnect</id> <phase>post-integration-test</phase> <goals> <goal>stop-sauceconnect</goal> 
-				</goals> </execution> </executions> </plugin> -->
 		</plugins>
 	</build>
 	<repositories>

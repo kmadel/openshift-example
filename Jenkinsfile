@@ -3,9 +3,9 @@ import groovy.json.JsonSlurper
 
 /**
 * The following parameters are used in this pipeline (thus available as groovy variables via Jenkins job parameters):
-* /
+*/
 properties([
-   [$class: 'ParametersDefinitionProperty', 
+    [$class: 'ParametersDefinitionProperty', 
        parameterDefinitions: [
            [name: 'OS_URL', $class: 'StringParameterDefinition', defaultValue: 'https://api.cloudbees.openshift.com/', description: 'URL for your OpenShift v3 API instance'], 
            [name: 'OS_CREDS_DEV', $class: 'CredentialsParameterDefinition', credentialType: 'com.cloudbees.plugins.credentials.common.StandardCredentials', defaultValue: '', description: 'credentials for your development project, either user name / password or OAuth token'], 
@@ -13,10 +13,9 @@ properties([
            [name: 'OS_CREDS_PROD', $class: 'CredentialsParameterDefinition', credentialType: 'com.cloudbees.plugins.credentials.common.StandardCredentials', defaultValue: '', description: 'credentials for your production project'], 
            [name: 'OS_BUILD_LOG', $class: 'ChoiceParameterDefinition', choices: 'follow\nwait', description: 'how to handle output of start-build command, either wait or follow']
         ]
-   ],
-   [$class: 'BuildDiscarderProperty',
-      strategy: [$class: 'LogRotator', numToKeepStr: '10', artifactNumToKeepStr: '10']
-   ]
+   ], [$class: 'BuildDiscarderProperty',
+        strategy: [$class: 'LogRotator', numToKeepStr: '10', artifactNumToKeepStr: '10']
+    ]
 ])
 
 stage 'build'
@@ -34,7 +33,7 @@ stage 'test[unit&quality]'
             sh 'mvn -Dmaven.test.failure.ignore=true test'
             step([$class: 'JUnitResultArchiver', testResults: '**/target/surefire-reports/TEST-*.xml'])
             if(currentBuild.result == 'UNSTABLE'){
-            	error "Unit test failures"
+                error "Unit test failures"
             }
         }
     }, 'quality-test': {
