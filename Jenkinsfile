@@ -11,7 +11,15 @@ import groovy.json.JsonSlurper
 * - OS_BUILD_LOG - how to handle output of start-build command, either 'wait' or 'follow'
 */
 
-properties [[$class: 'ParametersDefinitionProperty', parameterDefinitions: [[$class: 'StringParameterDefinition', defaultValue: 'https://api.cloudbees.openshift.com/', description: 'URL for your OpenShift v3 API instance', name: 'OS_URL'], [$class: 'CredentialsParameterDefinition', credentialType: 'com.cloudbees.plugins.credentials.common.StandardCredentials', defaultValue: '', description: 'credentials for your development project, either user name / password or OAuth token', name: 'OS_CREDS_DEV', required: false], [$class: 'CredentialsParameterDefinition', credentialType: 'com.cloudbees.plugins.credentials.common.StandardCredentials', defaultValue: '', description: 'credentials for your test project', name: 'OS_CREDS_TEST', required: false], [$class: 'CredentialsParameterDefinition', credentialType: 'com.cloudbees.plugins.credentials.common.StandardCredentials', defaultValue: '', description: 'credentials for your production project', name: 'OS_CREDS_PROD', required: false], [$class: 'ChoiceParameterDefinition', choices: ['follow', 'wait'], description: 'how to handle output of start-build command, either \'wait\' or \'follow\'', name: 'OS_BUILD_LOG']]]]
+
+
+properties([
+   [$class: 'BuildDiscarderProperty',
+      strategy: [$class: 'LogRotator', numToKeepStr: '10', artifactNumToKeepStr: '10']
+   ],
+   [$class: 'ParametersDefinitionProperty', 
+       parameterDefinitions: [[$class: 'StringParameterDefinition', defaultValue: 'https://api.cloudbees.openshift.com/', description: 'URL for your OpenShift v3 API instance', name: 'OS_URL'], [$class: 'CredentialsParameterDefinition', credentialType: 'com.cloudbees.plugins.credentials.common.StandardCredentials', defaultValue: '', description: 'credentials for your development project, either user name / password or OAuth token', name: 'OS_CREDS_DEV', required: false], [$class: 'CredentialsParameterDefinition', credentialType: 'com.cloudbees.plugins.credentials.common.StandardCredentials', defaultValue: '', description: 'credentials for your test project', name: 'OS_CREDS_TEST', required: false], [$class: 'CredentialsParameterDefinition', credentialType: 'com.cloudbees.plugins.credentials.common.StandardCredentials', defaultValue: '', description: 'credentials for your production project', name: 'OS_CREDS_PROD', required: false], [$class: 'ChoiceParameterDefinition', choices: ['follow', 'wait'], description: 'how to handle output of start-build command, either \'wait\' or \'follow\'', name: 'OS_BUILD_LOG']]]
+])
 
 stage 'build'
     node{
@@ -110,13 +118,6 @@ stage name:'deploy[production]', concurrency:1
             //TODO may need to monitor and wait for the build here
         }
     }
-
-
-properties([
-   [$class: 'BuildDiscarderProperty',
-      strategy: [$class: 'LogRotator', numToKeepStr: '10', artifactNumToKeepStr: '10']
-   ]
-])
 
 /**
 * Execute OpenShift v3 'oc' CLI commands, sending output to Jenkins log console and returned 
