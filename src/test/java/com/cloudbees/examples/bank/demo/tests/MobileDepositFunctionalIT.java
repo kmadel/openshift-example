@@ -45,7 +45,7 @@ public class MobileDepositFunctionalIT implements SauceOnDemandSessionIdProvider
 	 * {@link SauceOnDemandAuthentication} constructor.
 	 */
 	public SauceOnDemandAuthentication authentication = new SauceOnDemandAuthentication(
-			"cb_cloudbees-sa", "0ce882ef-06c4-4439-8b50-09027e4dd6d7");
+			"Partner_CloudBees", "8ccd0f7a-ac60-403a-9a9e-046aba4a9bcd");
 
 	/**
 	 * JUnit Rule which will mark the Sauce Job as passed/failed when the test
