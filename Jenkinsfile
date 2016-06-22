@@ -5,9 +5,9 @@ import groovy.json.JsonSlurper
 * The following parameters are used in this pipeline (thus available as groovy variables via Jenkins job parameters):
 * 
 * - OS_URL - URL for your OpenShift v3 API instance
-* - OS_CREDS_DEV - credentials for your development project, either username / password or oauth token
-* - OS_CREDS_TEST - credentials for your test project, either username / password or oauth token
-* - OS_CREDS_PROD - credentials for your production project, either username / password or oauth token
+* - OS_CREDS_DEV - credentials for your development project, either user name / password or oauth token
+* - OS_CREDS_TEST - credentials for your test project
+* - OS_CREDS_PROD - credentials for your production project
 * - OS_BUILD_LOG - how to handle output of start-build command, either 'wait' or 'follow'
 */
 
@@ -17,24 +17,25 @@ stage 'build'
         sh 'mvn -DskipTests clean package'
         step([$class: 'JUnitResultArchiver', testResults: '**/target/surefire-reports/TEST-*.xml'])
         stash name: 'source', includes: '**', excludes: 'target/*'
+        archive includes: 'target/*.war'
     }
         
 stage 'test[unit-&-quality]'
-	parallel 'unit-test': {
-	    node {
-	    	unstash 'source'
-	    	sh 'mvn test'
-	    }
-	}, 'quality-test': {
-	    node {
-	    	unstash 'source'
-	        sh 'mvn sonar:sonar'
-	    } 
-	}
+    parallel 'unit-test': {
+        node {
+            unstash 'source'
+            sh 'mvn test'
+        }
+    }, 'quality-test': {
+        node {
+            unstash 'source'
+            sh 'mvn sonar:sonar'
+        } 
+    }
 
 stage 'deploy[development]'
     node{
-    	unstash 'source'
+        unstash 'source'
         wrap([$class: 'OpenShiftBuildWrapper', url: OS_URL, credentialsId: OS_CREDS_DEV, insecure: true]) {
             oc('project mobile-development -q')
 
@@ -104,13 +105,13 @@ stage 'deploy[production]'
 * @see: https://docs.openshift.com/enterprise/3.0/cli_reference/index.html 
 */
 def oc(cmd){
-	sh "set -o pipefail"
-	sh "oc $cmd 2>&1 | tee output.jenkins"
-	def output = readFile 'output.jenkins'
-	if(output.startsWith('{')){
-	    output = new JsonSlurper().parseText(output)
-	}
-	sh "rm output.jenkins"
+    sh "set -o pipefail"
+    sh "oc $cmd 2>&1 | tee output.jenkins"
+    def output = readFile 'output.jenkins'
+    if(output.startsWith('{')){
+        output = new JsonSlurper().parseText(output)
+    }
+    sh "rm output.jenkins"
     return output
 }
 
@@ -123,5 +124,5 @@ def wait(selector, time, unit){
             def pod = oc("get pods --selector='$selector' -o json")
             return pod.items[0]?.status?.phase == 'Running'
         }
-	}
+    }
 }

@@ -16,26 +16,26 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		 <!-- (1) Sonar connection properties - typically specified on commandline -->
-        <sonar.host.url>http://sonar.beedemo.net:9000</sonar.host.url>
-        <!-- end (1) -->
+		<!-- (1) Sonar connection properties - typically specified on commandline -->
+		<sonar.host.url>http://sonar.beedemo.net:9000</sonar.host.url>
+		<!-- end (1) -->
 
-        <!-- (2) Help Sonar to be sure about language and version -->
-        <sonar.language>java</sonar.language>
-        <sonar.java.source>1.8</sonar.java.source>
-        <!-- end (2) -->
+		<!-- (2) Help Sonar to be sure about language and version -->
+		<sonar.language>java</sonar.language>
+		<sonar.java.source>1.8</sonar.java.source>
+		<!-- end (2) -->
 
-        <!-- (3) mandatory Sonar properties for capturing raw coverage report output -->
-        <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis> <!-- don't run tests if report file already exists -->
+		<!-- (3) mandatory Sonar properties for capturing raw coverage report output -->
+		<sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis> <!-- don't run tests if report file already exists -->
 
-        <!-- where sonar will find the junit reports -->
-        <sonar.junit.reportsPath>target/surefire-reports</sonar.junit.reportsPath>
-        <sonar.junit.itReportsPath>target/failsafe-reports</sonar.junit.itReportsPath>
+		<!-- where sonar will find the junit reports -->
+		<sonar.junit.reportsPath>target/surefire-reports</sonar.junit.reportsPath>
+		<sonar.junit.itReportsPath>target/failsafe-reports</sonar.junit.itReportsPath>
 
-        <!-- write unit test coverage info to each module's target folder -->
-        <sonar.jacoco.reportPath>target/jacoco-ut.exec</sonar.jacoco.reportPath>
-        <!-- append integration test coverage from each module to the same(!) file -->
-        <sonar.jacoco.itReportPath>${project.root.basedir}/target/jacoco-it.exec</sonar.jacoco.itReportPath>
+		<!-- write unit test coverage info to each module's target folder -->
+		<sonar.jacoco.reportPath>target/jacoco-ut.exec</sonar.jacoco.reportPath>
+		<!-- append integration test coverage from each module to the same(!) file -->
+		<sonar.jacoco.itReportPath>${project.root.basedir}/target/jacoco-it.exec</sonar.jacoco.itReportPath>
 	</properties>
 
 	<dependencies>
@@ -61,10 +61,10 @@
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 		<dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-tomcat</artifactId>
-            <scope>provided</scope>
-        </dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-tomcat</artifactId>
+			<scope>provided</scope>
+		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-thymeleaf</artifactId>
@@ -102,34 +102,13 @@
 					<groups>com.cloudbees.examples.bank.demo.categories.UnitTest</groups>
 				</configuration>
 			</plugin>
-			<!-- 
-			<plugin>
-				<groupId>com.saucelabs.maven.plugin</groupId>
-				<artifactId>sauce-connect-plugin</artifactId>
-				<version>2.1.13</version>
-				<configuration>
-					<sauceUsername>cb_cloudbees-sa</sauceUsername>
-					<sauceAccessKey>0ce882ef-06c4-4439-8b50-09027e4dd6d7</sauceAccessKey>
-					<port>4445</port>
-				</configuration>
-				<executions>
-					<execution>
-						<id>start-sauceconnct</id>
-						<phase>pre-integration-test</phase>
-						<goals>
-							<goal>start-sauceconnect</goal>
-						</goals>
-					</execution>
-					<execution>
-						<id>stop-sauceconnect</id>
-						<phase>post-integration-test</phase>
-						<goals>
-							<goal>stop-sauceconnect</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			-->
+			<!-- <plugin> <groupId>com.saucelabs.maven.plugin</groupId> <artifactId>sauce-connect-plugin</artifactId> 
+				<version>2.1.13</version> <configuration> <sauceUsername>cb_cloudbees-sa</sauceUsername> 
+				<sauceAccessKey>0ce882ef-06c4-4439-8b50-09027e4dd6d7</sauceAccessKey> <port>4445</port> 
+				</configuration> <executions> <execution> <id>start-sauceconnct</id> <phase>pre-integration-test</phase> 
+				<goals> <goal>start-sauceconnect</goal> </goals> </execution> <execution> 
+				<id>stop-sauceconnect</id> <phase>post-integration-test</phase> <goals> <goal>stop-sauceconnect</goal> 
+				</goals> </execution> </executions> </plugin> -->
 		</plugins>
 	</build>
 	<repositories>
@@ -157,4 +136,25 @@
 		</pluginRepository>
 	</pluginRepositories>
 
+	<profiles>
+		<profile>
+			<!-- When built in OpenShift the 'openshift' profile will be used when invoking mvn. -->
+			<!-- Use this profile for any OpenShift specific customization your app will need. -->
+			<!-- By default that is to put the resulting archive into the 'deployments' folder. -->
+			<!-- http://maven.apache.org/guides/mini/guide-building-for-different-environments.html -->
+			<id>openshift</id>
+			<build>
+				<plugins>
+					<plugin>
+						<artifactId>maven-war-plugin</artifactId>
+						<version>2.1.1</version>
+						<configuration>
+							<outputDirectory>deployments</outputDirectory>
+							<warName>ROOT</warName>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 </project>
