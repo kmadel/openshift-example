@@ -11,12 +11,6 @@ import groovy.json.JsonSlurper
 * - OS_BUILD_LOG - how to handle output of start-build command, either 'wait' or 'follow'
 */
 
-properties([
-   [$class: 'BuildDiscarderProperty',
-      strategy: [$class: 'LogRotator', numToKeepStr: '10', artifactNumToKeepStr: '10']
-   ]
-])
-
 stage 'build'
     node{
         checkout scm
@@ -39,7 +33,7 @@ stage 'test[unit&quality]'
         } 
     }
 
-stage 'deploy[development]'
+stage name:'deploy[development]', concurrency:1
     node{
         unstash 'source'
         wrap([$class: 'OpenShiftBuildWrapper', url: OS_URL, credentialsId: OS_CREDS_DEV, insecure: true]) {
@@ -57,7 +51,7 @@ stage 'deploy[development]'
     }
     checkpoint 'deploy[development]-complete'
 
-stage 'deploy[test]'
+stage name:'deploy[test]', concurrency:1
     mail to: 'apemberton@cloudbees.com',
         subject: "Deploy mobile-deposit-ui version #${env.BUILD_NUMBER} to test?",
         body: "Deploy mobile-deposit-ui#${env.BUILD_NUMBER} to test and start functional tests? Approve or Reject on ${env.BUILD_URL}."
@@ -90,7 +84,7 @@ stage 'test[functional]'
     }
     checkpoint 'test[functional]-complete'
     
-stage 'deploy[production]'
+stage name:'deploy[production]', concurrency:1
     mail to: 'apemberton@cloudbees.com',
         subject: "Deploy mobile-deposit-ui version #${env.BUILD_NUMBER} to production?",
         body: "Deploy mobile-deposit-ui#${env.BUILD_NUMBER} to production? Approve or Reject on ${env.BUILD_URL}."
@@ -115,6 +109,12 @@ stage 'deploy[production]'
         }
     }
 
+
+properties([
+   [$class: 'BuildDiscarderProperty',
+      strategy: [$class: 'LogRotator', numToKeepStr: '10', artifactNumToKeepStr: '10']
+   ]
+])
 
 /**
 * Execute OpenShift v3 'oc' CLI commands, sending output to Jenkins log console and returned 
