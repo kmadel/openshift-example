@@ -11,11 +11,13 @@ import groovy.json.JsonSlurper
 * - OS_BUILD_LOG - how to handle output of start-build command, either 'wait' or 'follow'
 */
 
+properties [[$class: 'ParametersDefinitionProperty', parameterDefinitions: [[$class: 'StringParameterDefinition', defaultValue: 'https://api.cloudbees.openshift.com/', description: 'URL for your OpenShift v3 API instance', name: 'OS_URL'], [$class: 'CredentialsParameterDefinition', credentialType: 'com.cloudbees.plugins.credentials.common.StandardCredentials', defaultValue: '', description: 'credentials for your development project, either user name / password or OAuth token', name: 'OS_CREDS_DEV', required: false], [$class: 'CredentialsParameterDefinition', credentialType: 'com.cloudbees.plugins.credentials.common.StandardCredentials', defaultValue: '', description: 'credentials for your test project', name: 'OS_CREDS_TEST', required: false], [$class: 'CredentialsParameterDefinition', credentialType: 'com.cloudbees.plugins.credentials.common.StandardCredentials', defaultValue: '', description: 'credentials for your production project', name: 'OS_CREDS_PROD', required: false], [$class: 'ChoiceParameterDefinition', choices: ['follow', 'wait'], description: 'how to handle output of start-build command, either \'wait\' or \'follow\'', name: 'OS_BUILD_LOG']]]]
+
 stage 'build'
     node{
         checkout scm
         sh 'mvn -DskipTests clean package'
-        stash name: 'source', includes: '**', excludes: 'target/*'
+        stash name: 'source', includes: '**', excludes: 'target/*, .git'
         archive includes: 'target/*.war'
     }
         
