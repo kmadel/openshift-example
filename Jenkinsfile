@@ -21,8 +21,8 @@ properties([
            [name: 'OS_CREDS_DEV', $class: 'CredentialsParameterDefinition', credentialType: 'com.cloudbees.plugins.credentials.common.StandardCredentials', defaultValue: '', description: 'credentials for your development project, either user name / password or OAuth token'], 
            [name: 'OS_CREDS_TEST', $class: 'CredentialsParameterDefinition', credentialType: 'com.cloudbees.plugins.credentials.common.StandardCredentials', defaultValue: '', description: 'credentials for your test project'], 
            [name: 'OS_CREDS_PROD', $class: 'CredentialsParameterDefinition', credentialType: 'com.cloudbees.plugins.credentials.common.StandardCredentials', defaultValue: '', description: 'credentials for your production project'], 
-           [name: 'OS_BUILD_LOG', $class: 'ChoiceParameterDefinition', choices: 'follow\nwait'], description: 'how to handle output of start-build command, either \'wait\' or \'follow\'']
-       ]
+           [name: 'OS_BUILD_LOG', $class: 'ChoiceParameterDefinition', choices: 'follow\nwait', description: 'how to handle output of start-build command, either wait or follow']
+        ]
    ]
 ])
 
@@ -30,7 +30,7 @@ stage 'build'
     node{
         checkout scm
         sh 'mvn -DskipTests clean package'
-        stash name: 'source', includes: '**', excludes: 'target/*, .git'
+        stash name: 'source', excludes: 'target/'
         archive includes: 'target/*.war'
     }
         
@@ -38,8 +38,11 @@ stage 'test[unit&quality]'
     parallel 'unit-test': {
         node {
             unstash 'source'
-            sh 'mvn test'
+            sh 'mvn -Dmaven.test.failure.ignore=true test'
             step([$class: 'JUnitResultArchiver', testResults: '**/target/surefire-reports/TEST-*.xml'])
+            if(currentBuild.result == 'UNSTABLE'){
+            	error "Unit test failures"
+            }
         }
     }, 'quality-test': {
         node {
