@@ -25,9 +25,6 @@
 		<sonar.java.source>1.8</sonar.java.source>
 		<!-- end (2) -->
 
-		<!-- (3) mandatory Sonar properties for capturing raw coverage report output -->
-		<sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis> <!-- don't run tests if report file already exists -->
-
 		<!-- where sonar will find the junit reports -->
 		<sonar.junit.reportsPath>target/surefire-reports</sonar.junit.reportsPath>
 		<sonar.junit.itReportsPath>target/failsafe-reports</sonar.junit.itReportsPath>

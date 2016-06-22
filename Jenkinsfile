@@ -5,11 +5,17 @@ import groovy.json.JsonSlurper
 * The following parameters are used in this pipeline (thus available as groovy variables via Jenkins job parameters):
 * 
 * - OS_URL - URL for your OpenShift v3 API instance
-* - OS_CREDS_DEV - credentials for your development project, either user name / password or oauth token
+* - OS_CREDS_DEV - credentials for your development project, either user name / password or OAuth token
 * - OS_CREDS_TEST - credentials for your test project
 * - OS_CREDS_PROD - credentials for your production project
 * - OS_BUILD_LOG - how to handle output of start-build command, either 'wait' or 'follow'
 */
+
+properties([
+   [$class: 'BuildDiscarderProperty',
+      strategy: [$class: 'LogRotator', numToKeepStr: '10', artifactNumToKeepStr: '10']
+   ]
+])
 
 stage 'build'
     node{
@@ -19,7 +25,7 @@ stage 'build'
         archive includes: 'target/*.war'
     }
         
-stage 'test[unit-&-quality]'
+stage 'test[unit&quality]'
     parallel 'unit-test': {
         node {
             unstash 'source'
@@ -52,7 +58,11 @@ stage 'deploy[development]'
     checkpoint 'deploy[development]-complete'
 
 stage 'deploy[test]'
-    input 'do you want to deploy this build to test?'
+    mail to: 'apemberton@cloudbees.com',
+        subject: "Deploy mobile-deposit-ui version #${env.BUILD_NUMBER} to test?",
+        body: "Deploy mobile-deposit-ui#${env.BUILD_NUMBER} to test and start functional tests? Approve or Reject on ${env.BUILD_URL}."
+    input "Deploy mobile-deposit-ui#${env.BUILD_NUMBER} to test?"
+    
     node{
         wrap([$class: 'OpenShiftBuildWrapper', url: OS_URL, credentialsId: OS_CREDS_TEST, insecure: true]) {
             def project = oc('project mobile-development -q')
@@ -78,10 +88,14 @@ stage 'test[functional]'
         sh 'mvn verify' //TODO pass URL to test server
         step([$class: 'JUnitResultArchiver', testResults: '**/target/failsafe-reports/TEST-*.xml'])
     }
-    checkpoint 'test[functional]-complete' 
+    checkpoint 'test[functional]-complete'
     
 stage 'deploy[production]'
-    input 'do you want to deploy this build to production?'
+    mail to: 'apemberton@cloudbees.com',
+        subject: "Deploy mobile-deposit-ui version #${env.BUILD_NUMBER} to production?",
+        body: "Deploy mobile-deposit-ui#${env.BUILD_NUMBER} to production? Approve or Reject on ${env.BUILD_URL}."
+    input "Deploy mobile-deposit-ui#${env.BUILD_NUMBER} to production?"
+    
     node{
         wrap([$class: 'OpenShiftBuildWrapper', url: OS_URL, credentialsId: OS_CREDS_PROD, insecure: true]) {
             def project = oc('project mobile-test -q')
@@ -125,6 +139,7 @@ def oc(cmd){
 def wait(selector, time, unit){
     timeout(time: time, unit: unit){
         waitUntil{
+            sleep 5L //poll only every 5 seconds
             def pod = oc("get pods --selector='$selector' -o json")
             return pod.items[0]?.status?.phase == 'Running'
         }
