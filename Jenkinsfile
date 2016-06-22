@@ -11,7 +11,7 @@ import groovy.json.JsonSlurper
 * - OS_BUILD_LOG - how to handle output of start-build command, either 'wait' or 'follow'
 */
 
-properties [
+properties([
    [$class: 'BuildDiscarderProperty',
       strategy: [$class: 'LogRotator', numToKeepStr: '10', artifactNumToKeepStr: '10']
    ],
@@ -24,7 +24,7 @@ properties [
            [name: 'OS_BUILD_LOG', $class: 'ChoiceParameterDefinition', choices: 'follow\nwait'], description: 'how to handle output of start-build command, either \'wait\' or \'follow\'']
        ]
    ]
-]
+])
 
 stage 'build'
     node{
