@@ -14,22 +14,21 @@ import groovy.json.JsonSlurper
 stage 'build'
     node{
         checkout scm
-        sh 'mvn clean package'
+        sh 'mvn -DskipTests clean package'
         step([$class: 'JUnitResultArchiver', testResults: '**/target/surefire-reports/TEST-*.xml'])
         stash name: 'source', includes: '**', excludes: 'target/*'
     }
         
-stage 'test[integration-&-quality]'
-	parallel 'integration-test': {
+stage 'test[unit-&-quality]'
+	parallel 'unit-test': {
 	    node {
 	    	unstash 'source'
-	    	sh "cat pom.xml"
+	    	sh 'mvn test'
 	    }
 	}, 'quality-test': {
 	    node {
 	    	unstash 'source'
-	        //sh 'mvn sonar:sonar'
-	        echo 'quality'
+	        sh 'mvn sonar:sonar'
 	    } 
 	}
 
