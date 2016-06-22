@@ -89,7 +89,8 @@ stage 'test[functional]'
     node {
         unstash 'source'
         sh 'mvn verify' //TODO pass URL to test server
-        step([$class: 'JUnitResultArchiver', testResults: '**/target/failsafe-reports/TEST-*.xml'])
+        step([$class: 'JUnitResultArchiver', testResults: '**/target/failsafe-reports/TEST-*.xml', testDataPublishers: [[$class: 'SauceOnDemandReportPublisher', jobVisibility: 'public']]])
+        step([$class: 'SauceOnDemandTestPublisher', testDataPublishers: []])
     }
     checkpoint 'test[functional]-complete'
     
