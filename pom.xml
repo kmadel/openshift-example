@@ -16,6 +16,26 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		 <!-- (1) Sonar connection properties - typically specified on commandline -->
+        <sonar.host.url>http://sonar.beedemo.net:9000</sonar.host.url>
+        <!-- end (1) -->
+
+        <!-- (2) Help Sonar to be sure about language and version -->
+        <sonar.language>java</sonar.language>
+        <sonar.java.source>1.8</sonar.java.source>
+        <!-- end (2) -->
+
+        <!-- (3) mandatory Sonar properties for capturing raw coverage report output -->
+        <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis> <!-- don't run tests if report file already exists -->
+
+        <!-- where sonar will find the junit reports -->
+        <sonar.junit.reportsPath>target/surefire-reports</sonar.junit.reportsPath>
+        <sonar.junit.itReportsPath>target/failsafe-reports</sonar.junit.itReportsPath>
+
+        <!-- write unit test coverage info to each module's target folder -->
+        <sonar.jacoco.reportPath>target/jacoco-ut.exec</sonar.jacoco.reportPath>
+        <!-- append integration test coverage from each module to the same(!) file -->
+        <sonar.jacoco.itReportPath>${project.root.basedir}/target/jacoco-it.exec</sonar.jacoco.itReportPath>
 	</properties>
 
 	<dependencies>
@@ -64,6 +84,9 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-failsafe-plugin</artifactId>
+				<configuration>
+					<groups>com.cloudbees.examples.bank.demo.categories.FunctionalTest</groups>
+				</configuration>
 				<executions>
 					<execution>
 						<goals>
@@ -76,7 +99,7 @@
 			<plugin>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
-					<groups>com.cloudbees.examples.bank.demo.UnitTest</groups>
+					<groups>com.cloudbees.examples.bank.demo.categories.UnitTest</groups>
 				</configuration>
 			</plugin>
 			<!-- 
