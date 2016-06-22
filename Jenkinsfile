@@ -16,7 +16,7 @@ stage 'build'
         checkout scm
         sh 'mvn clean package'
         step([$class: 'JUnitResultArchiver', testResults: '**/target/surefire-reports/TEST-*.xml'])
-        stash name: 'source', includes: '*/*', excludes: 'target/*'
+        stash name: 'source', includes: '**', excludes: 'target/*'
     }
         
 stage 'test[integration-&-quality]'
