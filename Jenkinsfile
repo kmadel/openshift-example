@@ -18,6 +18,8 @@ properties([
     ]
 ])
 
+
+
 stage 'build'
     node{
         checkout scm
@@ -51,8 +53,9 @@ stage name:'deploy[development]', concurrency:1
 
             def bc = oc('get bc -o json')
             if(!bc.items) {
+            	//TODO still a branch problem here
                 oc("new-app --name=mobile-deposit-ui --code='.' --image-stream=jboss-webserver30-tomcat8-openshift")
-                wait('app=mobile-deposit-ui', 5, 'MINUTES')
+                wait('app=mobile-deposit-ui', 7, 'MINUTES')
                 oc('expose service mobile-deposit-ui')
             } else {
                 oc("start-build mobile-deposit-ui --from-dir=. --$OS_BUILD_LOG")
@@ -81,8 +84,9 @@ stage name:'deploy[test]', concurrency:1
                 oc("new-app mobile-development/$image:test")
                 wait('app=mobile-deposit-ui', 7, 'MINUTES') //TODO need to further validate
                 oc('expose service mobile-deposit-ui')
-                sleep time: 60, unit: 'SECONDS' //give JBoss another minute to start
             }
+            
+            sleep time: 120, unit: 'SECONDS' //give JBoss another minute to start
         }
     }
     
