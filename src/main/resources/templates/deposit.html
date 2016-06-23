@@ -12,14 +12,14 @@
                 var apiProto = /*[[${apiProto}]]*/;
                 var apiHost = /*[[${apiHost}]]*/;
                 var apiPort = /*[[${apiPort}]]*/;
-                $.ajax({
-                    url:  apiProto + "://" + apiHost + ":" + apiPort + "/account/deposit",
-                    dataType: "json"
-                }).then(function(data) {
-                   $('.account-number').append(data.accountNumber);
-                   $('.balance').append(data.balance);
-                   $('.version').append(data.version);
-                });
+                // $.ajax({
+                //     url:  apiProto + "://" + apiHost + ":" + apiPort + "/account/deposit",
+                //     dataType: "json"
+                // }).then(function(data) {
+                //    $('.account-number').append(data.accountNumber);
+                //    $('.balance').append(data.balance);
+                //    $('.version').append(data.version);
+                // });
             });
         </script>
     </head>
@@ -32,7 +32,6 @@
             </div><!-- /header -->
 
             <div data-role="content">   
-
     
             <h2 class="ui-bar ui-bar-a ui-corner-all">Mobile Deposit</h2>
             <div class="ui-body ui-body-a ui-corner-all">
@@ -42,9 +41,9 @@
                         <legend>Account:</legend>
                         <input type="radio" name="radio-choice-1" id="radio-choice-1" value="choice-1" checked="checked" />
                         <label for="radio-choice-1">
-                            <span class="account-number"></span> - 
-                            <span class="account-name"></span> - 
-                            <span class="balance">$</span>
+                            <span class="account-number">XXXX6123</span> - 
+                            <span class="account-name">Business Checking</span> - 
+                            <span class="balance">$11,265</span>
                         </label>
                     </fieldset>
 
