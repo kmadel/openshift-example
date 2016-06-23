@@ -149,7 +149,7 @@ public class MobileDepositFunctionalIT implements SauceOnDemandSessionIdProvider
 	 */
 	@Test
 	public void hasAnAccountNumber() throws Exception {
-		driver.get("http://mobile-deposit-ui-mobile-test.e611.cloudbees.openshiftapps.com/deposit");
+		driver.get("http://mobile-deposit-ui-mobile-test.e611.cloudbees.openshiftapps.com/mobile-deposit-ui-1.0-SNAPSHOT/deposit");
 		assertNotNull(driver.findElement(By.className("account-number")));
 	}
 
