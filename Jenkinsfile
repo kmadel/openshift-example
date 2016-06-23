@@ -106,9 +106,9 @@ stage name:'deploy[production]', concurrency:1
     
     node{
         wrap([$class: 'OpenShiftBuildWrapper', url: OS_URL, credentialsId: OS_CREDS_PROD, insecure: true]) {
-            def project = oc('project mobile-test -q')
+            def project = oc('project mobile-development -q')
             def is = oc('get is -o json')
-            def image = is?.items[0].metadata.name
+            def image = is?.items[0]?.metadata.name
             
             oc("tag $image:test $image:production")
 
