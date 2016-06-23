@@ -28,7 +28,7 @@ import com.saucelabs.junit.SauceOnDemandTestWatcher;
 /**
  * Demonstrates how to write a JUnit test that runs tests against Sauce Labs
  * using multiple browsers in parallel.
- * <p/>
+ * 
  * The test also includes the {@link SauceOnDemandTestWatcher} which will invoke
  * the Sauce REST API to mark the test as passed or failed.
  * 
@@ -44,8 +44,7 @@ public class MobileDepositFunctionalIT implements SauceOnDemandSessionIdProvider
 	 * environment variables or from an external file, use the no-arg
 	 * {@link SauceOnDemandAuthentication} constructor.
 	 */
-	public SauceOnDemandAuthentication authentication = new SauceOnDemandAuthentication(
-			"Partner_CloudBees", "8ccd0f7a-ac60-403a-9a9e-046aba4a9bcd");
+	public SauceOnDemandAuthentication authentication = new SauceOnDemandAuthentication();
 
 	/**
 	 * JUnit Rule which will mark the Sauce Job as passed/failed when the test

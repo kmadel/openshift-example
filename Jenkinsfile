@@ -25,7 +25,12 @@ stage 'build'
         sh 'mvn -DskipTests clean package'
         stash name: 'source', excludes: 'target/'
         archive includes: 'target/*.war'
-    }
+        
+        withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'sauce-labs-api-creds', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
+            withEnv(["SAUCE_USER_NAME=$USERNAME", "SAUCE_API_KEY=$PASSWORD"]) {
+                sh "mvn verify"
+            }
+        }
         
 stage 'test[unit&quality]'
     parallel 'unit-test': {
@@ -130,16 +135,13 @@ stage name:'deploy[production]', concurrency:1
 */
 def oc(cmd){
     def output
-    // try{
-        sh "set -o pipefail"
-        sh "oc $cmd 2>&1 | tee output.jenkins"
-        output = readFile 'output.jenkins'
-        if(output.startsWith('{')){
-            output = new JsonSlurper().parseText(output)
-        }
-    //}finally{
-        sh "rm output.jenkins"
-    //}
+    sh "set -o pipefail"
+    sh "oc $cmd 2>&1 | tee output.jenkins"
+    output = readFile 'output.jenkins'
+    if(output.startsWith('{')){
+        output = new JsonSlurper().parseText(output)
+    }
+    sh "rm output.jenkins"
     return output
 }
 
