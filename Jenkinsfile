@@ -26,11 +26,6 @@ stage 'build'
         sh 'mvn -DskipTests clean package'
         stash name: 'source', excludes: 'target/'
         archive includes: 'target/*.war'
-        
-        withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: SAUCE_CREDS, 
-            usernameVariable: 'SAUCE_USER_NAME', passwordVariable: 'SAUCE_API_KEY']]) {
-            sh "mvn verify"
-        }
     }
         
 stage 'test[unit&quality]'
@@ -70,8 +65,7 @@ stage name:'deploy[development]', concurrency:1
     checkpoint 'deploy[development]-complete'
 
 stage name:'deploy[test]', concurrency:1
-    mail to: 'apemberton@cloudbees.com',
-        subject: "Deploy mobile-deposit-ui version #${env.BUILD_NUMBER} to test?",
+    mail to: 'apemberton@cloudbees.com', subject: "Deploy mobile-deposit-ui version #${env.BUILD_NUMBER} to test?",
         body: "Deploy mobile-deposit-ui#${env.BUILD_NUMBER} to test and start functional tests? Approve or Reject on ${env.BUILD_URL}."
     input "Deploy mobile-deposit-ui#${env.BUILD_NUMBER} to test?"
     
@@ -87,21 +81,20 @@ stage name:'deploy[test]', concurrency:1
             def dc = oc('get dc -o json')
             if(!dc.items){
                 oc("new-app mobile-development/$image:test")
-                wait('app=mobile-deposit-ui', 7, 'MINUTES') //TODO need to further validate
+                wait('app=mobile-deposit-ui', 7, 'MINUTES')
                 oc('expose service mobile-deposit-ui')
             }
             
-            sleep time: 120, unit: 'SECONDS' //give JBoss another minute to start
+            sleep time: 120, unit: 'SECONDS' //give JBoss another minute to start; probably better ways to validate
         }
     }
     
 stage 'test[functional]'
     node {
         unstash 'source'
-         //TODO pass URL to test server
         withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: SAUCE_CREDS, 
             usernameVariable: 'SAUCE_USER_NAME', passwordVariable: 'SAUCE_API_KEY']]) {
-            sh "mvn verify"
+            sh "mvn verify" //TODO pass URL to test route
         }
         step([$class: 'JUnitResultArchiver', testResults: '**/target/failsafe-reports/TEST-*.xml', testDataPublishers: [[$class: 'SauceOnDemandReportPublisher', jobVisibility: 'public']]])
         
@@ -109,8 +102,7 @@ stage 'test[functional]'
     checkpoint 'test[functional]-complete'
     
 stage name:'deploy[production]', concurrency:1
-    mail to: 'apemberton@cloudbees.com',
-        subject: "Deploy mobile-deposit-ui version #${env.BUILD_NUMBER} to production?",
+    mail to: 'apemberton@cloudbees.com', subject: "Deploy mobile-deposit-ui version #${env.BUILD_NUMBER} to production?",
         body: "Deploy mobile-deposit-ui#${env.BUILD_NUMBER} to production? Approve or Reject on ${env.BUILD_URL}."
     input "Deploy mobile-deposit-ui#${env.BUILD_NUMBER} to production?"
     
