@@ -112,7 +112,7 @@ stage name:'deploy[production]', concurrency:1
             project = oc('project mobile-production -q')
             def dc = oc('get dc -o json')
             if(!dc.items){
-                oc("new-app mobile-development/$image:test")
+                oc("new-app mobile-development/$image:production")
                 wait('app=mobile-deposit-ui', 7, 'MINUTES')
                 oc('expose service mobile-deposit-ui')
             }
