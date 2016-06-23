@@ -28,9 +28,9 @@ stage 'build'
         archive includes: 'target/*.war'
         
         withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: SAUCE_CREDS, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
-            withEnv(["SAUCE_USER_NAME=$USERNAME", "SAUCE_API_KEY=$PASSWORD"]) {
-                sh "mvn verify"
-            }
+            // withEnv(["SAUCE_USER_NAME=$USERNAME", "SAUCE_API_KEY=$PASSWORD"]) {
+                sh "mvn -DSAUCE_USER_NAME=$USERNAME -DSAUCE_API_KEY=$PASSWORD verify"
+            // }
         }
     }
         
