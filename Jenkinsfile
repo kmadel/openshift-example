@@ -81,6 +81,7 @@ stage name:'deploy[test]', concurrency:1
                 oc("new-app mobile-development/$image:test")
                 wait('app=mobile-deposit-ui', 7, 'MINUTES') //TODO need to further validate
                 oc('expose service mobile-deposit-ui')
+                sleep time: 60, unit: 'SECONDS' //give JBoss another minute to start
             }
         }
     }
