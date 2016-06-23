@@ -8,10 +8,10 @@ properties([
     [$class: 'ParametersDefinitionProperty', 
        parameterDefinitions: [
            [name: 'OS_URL', $class: 'StringParameterDefinition', defaultValue: 'https://api.cloudbees.openshift.com/', description: 'URL for your OpenShift v3 API instance'], 
-           [name: 'OS_CREDS_DEV', $class: 'CredentialsParameterDefinition', credentialType: 'com.cloudbees.plugins.credentials.common.StandardCredentials', defaultValue: '', description: 'credentials for your development project, either user name / password or OAuth token'], 
-           [name: 'OS_CREDS_TEST', $class: 'CredentialsParameterDefinition', credentialType: 'com.cloudbees.plugins.credentials.common.StandardCredentials', defaultValue: '', description: 'credentials for your test project'], 
-           [name: 'OS_CREDS_PROD', $class: 'CredentialsParameterDefinition', credentialType: 'com.cloudbees.plugins.credentials.common.StandardCredentials', defaultValue: '', description: 'credentials for your production project'],
-           [name: 'SAUCE_CREDS', $class: 'CredentialsParameterDefinition', credentialType: 'com.cloudbees.plugins.credentials.common.StandardCredentials', defaultValue: '', description: 'credentials for your saucelabs'], 
+           [name: 'OS_CREDS_DEV', $class: 'CredentialsParameterDefinition', credentialType: 'com.cloudbees.plugins.credentials.common.StandardCredentials', defaultValue: 'mobile-development-default-openshift-token', description: 'credentials for your development project, either user name / password or OAuth token'], 
+           [name: 'OS_CREDS_TEST', $class: 'CredentialsParameterDefinition', credentialType: 'com.cloudbees.plugins.credentials.common.StandardCredentials', defaultValue: 'mobile-test-deployer-openshift-token', description: 'credentials for your test project'], 
+           [name: 'OS_CREDS_PROD', $class: 'CredentialsParameterDefinition', credentialType: 'com.cloudbees.plugins.credentials.common.StandardCredentials', defaultValue: 'mobile-production-deployer-openshift-token', description: 'credentials for your production project'],
+           [name: 'SAUCE_CREDS', $class: 'CredentialsParameterDefinition', credentialType: 'com.cloudbees.plugins.credentials.common.StandardCredentials', defaultValue: 'sauce-api-creds', description: 'credentials for your saucelabs'], 
            [name: 'OS_BUILD_LOG', $class: 'ChoiceParameterDefinition', choices: 'follow\nwait', description: 'how to handle output of start-build command, either wait or follow']
         ]
    ], [$class: 'BuildDiscarderProperty',
@@ -27,10 +27,9 @@ stage 'build'
         stash name: 'source', excludes: 'target/'
         archive includes: 'target/*.war'
         
-        withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: SAUCE_CREDS, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
-            // withEnv(["SAUCE_USER_NAME=$USERNAME", "SAUCE_API_KEY=$PASSWORD"]) {
-                sh "mvn -DSAUCE_USER_NAME=$USERNAME -DSAUCE_API_KEY=$PASSWORD verify"
-            // }
+        withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: SAUCE_CREDS, 
+            usernameVariable: 'SAUCE_USER_NAME', passwordVariable: 'SAUCE_API_KEY']]) {
+            sh "mvn verify"
         }
     }
         
@@ -99,7 +98,11 @@ stage name:'deploy[test]', concurrency:1
 stage 'test[functional]'
     node {
         unstash 'source'
-        sh 'mvn verify' //TODO pass URL to test server
+         //TODO pass URL to test server
+        withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: SAUCE_CREDS, 
+            usernameVariable: 'SAUCE_USER_NAME', passwordVariable: 'SAUCE_API_KEY']]) {
+            sh "mvn verify"
+        }
         step([$class: 'JUnitResultArchiver', testResults: '**/target/failsafe-reports/TEST-*.xml', testDataPublishers: [[$class: 'SauceOnDemandReportPublisher', jobVisibility: 'public']]])
         
     }
