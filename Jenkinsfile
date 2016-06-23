@@ -89,7 +89,7 @@ stage 'test[functional]'
     node {
         unstash 'source'
         sh 'mvn verify' //TODO pass URL to test server
-        step([$class: 'JUnitResultArchiver', testResults: '**/target/failsafe-reports/TEST-*.xml', testDataPublishers: [[$class: 'SauceOnDemandReportPublisher', jobVisibility: 'public']]])
+        step([$class: 'JUnitResultArchiver', testResults: '**/target/failsafe-reports/TEST-*.xml', testDataPublishers: []])
         step([$class: 'SauceOnDemandTestPublisher', testDataPublishers: []])
     }
     checkpoint 'test[functional]-complete'
@@ -125,15 +125,15 @@ stage name:'deploy[production]', concurrency:1
 * @see: https://docs.openshift.com/enterprise/3.0/cli_reference/index.html 
 */
 def oc(cmd){
-	def output
+    def output
     // try{
-    	sh "set -o pipefail"
-    	sh "oc $cmd 2>&1 | tee output.jenkins"
-	    output = readFile 'output.jenkins'
-	    if(output.startsWith('{')){
-	        output = new JsonSlurper().parseText(output)
-	    }
-	//}finally{
+        sh "set -o pipefail"
+        sh "oc $cmd 2>&1 | tee output.jenkins"
+        output = readFile 'output.jenkins'
+        if(output.startsWith('{')){
+            output = new JsonSlurper().parseText(output)
+        }
+    //}finally{
         sh "rm output.jenkins"
     //}
     return output
