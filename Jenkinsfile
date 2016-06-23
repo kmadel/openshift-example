@@ -126,16 +126,16 @@ stage name:'deploy[production]', concurrency:1
 */
 def oc(cmd){
 	def output
-    try{
+    // try{
     	sh "set -o pipefail"
     	sh "oc $cmd 2>&1 | tee output.jenkins"
 	    output = readFile 'output.jenkins'
 	    if(output.startsWith('{')){
 	        output = new JsonSlurper().parseText(output)
 	    }
-	}finally{
+	//}finally{
         sh "rm output.jenkins"
-    }
+    //}
     return output
 }
 
