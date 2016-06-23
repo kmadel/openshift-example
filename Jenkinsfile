@@ -10,7 +10,8 @@ properties([
            [name: 'OS_URL', $class: 'StringParameterDefinition', defaultValue: 'https://api.cloudbees.openshift.com/', description: 'URL for your OpenShift v3 API instance'], 
            [name: 'OS_CREDS_DEV', $class: 'CredentialsParameterDefinition', credentialType: 'com.cloudbees.plugins.credentials.common.StandardCredentials', defaultValue: '', description: 'credentials for your development project, either user name / password or OAuth token'], 
            [name: 'OS_CREDS_TEST', $class: 'CredentialsParameterDefinition', credentialType: 'com.cloudbees.plugins.credentials.common.StandardCredentials', defaultValue: '', description: 'credentials for your test project'], 
-           [name: 'OS_CREDS_PROD', $class: 'CredentialsParameterDefinition', credentialType: 'com.cloudbees.plugins.credentials.common.StandardCredentials', defaultValue: '', description: 'credentials for your production project'], 
+           [name: 'OS_CREDS_PROD', $class: 'CredentialsParameterDefinition', credentialType: 'com.cloudbees.plugins.credentials.common.StandardCredentials', defaultValue: '', description: 'credentials for your production project'],
+           [name: 'SAUCE_CREDS', $class: 'CredentialsParameterDefinition', credentialType: 'com.cloudbees.plugins.credentials.common.StandardCredentials', defaultValue: '', description: 'credentials for your saucelabs'], 
            [name: 'OS_BUILD_LOG', $class: 'ChoiceParameterDefinition', choices: 'follow\nwait', description: 'how to handle output of start-build command, either wait or follow']
         ]
    ], [$class: 'BuildDiscarderProperty',
@@ -26,11 +27,12 @@ stage 'build'
         stash name: 'source', excludes: 'target/'
         archive includes: 'target/*.war'
         
-        withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'sauce-labs-api-creds', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
+        withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: SAUCE_CREDS, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
             withEnv(["SAUCE_USER_NAME=$USERNAME", "SAUCE_API_KEY=$PASSWORD"]) {
                 sh "mvn verify"
             }
         }
+    }
         
 stage 'test[unit&quality]'
     parallel 'unit-test': {
