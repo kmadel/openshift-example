@@ -26,6 +26,11 @@ stage 'build'
         sh 'mvn -DskipTests clean package'
         stash name: 'source', excludes: 'target/'
         archive includes: 'target/*.war'
+        
+                sh 'mvn verify' //TODO pass URL to test server
+        step([$class: 'SauceOnDemandTestPublisher', testDataPublishers: []])
+        step([$class: 'JUnitResultArchiver', testResults: '**/target/failsafe-reports/TEST-*.xml', testDataPublishers: [[$class: 'SauceOnDemandReportPublisher', jobVisibility: 'public']]])
+        
     }
         
 stage 'test[unit&quality]'
@@ -94,8 +99,9 @@ stage 'test[functional]'
     node {
         unstash 'source'
         sh 'mvn verify' //TODO pass URL to test server
-        step([$class: 'JUnitResultArchiver', testResults: '**/target/failsafe-reports/TEST-*.xml', testDataPublishers: []])
         step([$class: 'SauceOnDemandTestPublisher', testDataPublishers: []])
+        step([$class: 'JUnitResultArchiver', testResults: '**/target/failsafe-reports/TEST-*.xml', testDataPublishers: [[$class: 'SauceOnDemandReportPublisher', jobVisibility: 'public']]])
+        
     }
     checkpoint 'test[functional]-complete'
     
