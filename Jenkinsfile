@@ -79,7 +79,7 @@ stage name:'deploy[test]', concurrency:1
             def dc = oc('get dc -o json')
             if(!dc.items){
                 oc("new-app mobile-development/$image:test")
-                wait('app=mobile-deposit-ui', 5, 'MINUTES')
+                wait('app=mobile-deposit-ui', 7, 'MINUTES') //TODO need to further validate
                 oc('expose service mobile-deposit-ui')
             }
         }
@@ -112,7 +112,7 @@ stage name:'deploy[production]', concurrency:1
             def dc = oc('get dc -o json')
             if(!dc.items){
                 oc("new-app mobile-development/$image:test")
-                wait('app=mobile-deposit-ui', 5, 'MINUTES')
+                wait('app=mobile-deposit-ui', 7, 'MINUTES')
                 oc('expose service mobile-deposit-ui')
             }
         }
