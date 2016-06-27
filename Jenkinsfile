@@ -48,7 +48,7 @@ stage 'test[unit&quality]'
 stage name:'deploy[development]', concurrency:1
     node{
         unstash 'source'
-        wrap([$class: 'OpenShiftBuildWrapper', url: OS_URL, credentialsId: OS_CREDS_DEV, insecure: true]) {
+        wrap([$class: 'OpenShiftBuildWrapper', url: OS_URL, credentialsId: OS_CREDS_DEV, installation: 'oc-latest', insecure: true]) {
             oc('project mobile-development -q')
 
             def bc = oc('get bc -o json')
@@ -70,7 +70,7 @@ stage name:'deploy[test]', concurrency:1
     input "Deploy mobile-deposit-ui#${env.BUILD_NUMBER} to test?"
     
     node{
-        wrap([$class: 'OpenShiftBuildWrapper', url: OS_URL, credentialsId: OS_CREDS_TEST, insecure: true]) {
+        wrap([$class: 'OpenShiftBuildWrapper', url: OS_URL, credentialsId: OS_CREDS_TEST, installation: 'oc-latest', insecure: true]) {
             def project = oc('project mobile-development -q')
             def is = oc('get is -o json')
             def image = is?.items[0].metadata.name
@@ -107,7 +107,7 @@ stage name:'deploy[production]', concurrency:1
     input "Deploy mobile-deposit-ui#${env.BUILD_NUMBER} to production?"
     
     node{
-        wrap([$class: 'OpenShiftBuildWrapper', url: OS_URL, credentialsId: OS_CREDS_PROD, insecure: true]) {
+        wrap([$class: 'OpenShiftBuildWrapper', url: OS_URL, credentialsId: OS_CREDS_PROD, installation: 'oc-latest', insecure: true]) {
             def project = oc('project mobile-development -q')
             def is = oc('get is -o json')
             def image = is?.items[0]?.metadata.name
