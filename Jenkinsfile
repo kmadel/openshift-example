@@ -1,5 +1,5 @@
 #!groovy
-import groovy.json.JsonSlurper
+import groovy.json.JsonSlurperClassic
 
 /**
 * The following parameters are used in this pipeline (thus available as groovy variables via Jenkins job parameters):
@@ -20,15 +20,16 @@ properties([
 ])
 
 
-stage 'build'
+stage('build') {
     node{
         checkout scm
         sh 'mvn -DskipTests clean package'
         stash name: 'source', excludes: 'target/'
         archive includes: 'target/*.war'
     }
+}
         
-stage 'test[unit&quality]'
+stage('test[unit&quality]') {
     parallel 'unit-test': {
         node {
             unstash 'source'
@@ -44,52 +45,64 @@ stage 'test[unit&quality]'
             sh 'mvn sonar:sonar'
         } 
     }
+}
 
-stage name:'deploy[development]', concurrency:1
-    node{
-        unstash 'source'
-        wrap([$class: 'OpenShiftBuildWrapper', url: OS_URL, credentialsId: OS_CREDS_DEV, installation: 'oc-latest', insecure: true]) {
-            oc('project mobile-development -q')
+//aborts previous runs that haven't reached this point
+milestone 1
+stage('deploy[development]') {
+    //only allow one deployment to development at a time
+    lock(resource: 'development-server', inversePrecedence: true) {
+        node{
+            unstash 'source'
+            wrap([$class: 'OpenShiftBuildWrapper', url: OS_URL, credentialsId: OS_CREDS_DEV, installation: 'oc-latest', insecure: true]) {
+                oc('project mobile-development -q')
 
-            def bc = oc('get bc -o json')
-            if(!bc.items) {
-            	//TODO still a branch problem here
-                oc("new-app --name=mobile-deposit-ui --code='.' --image-stream=jboss-webserver30-tomcat8-openshift")
-                wait('app=mobile-deposit-ui', 7, 'MINUTES')
-                oc('expose service mobile-deposit-ui')
-            } else {
-                oc("start-build mobile-deposit-ui --from-dir=. --$OS_BUILD_LOG")
+                def bc = oc('get bc -o json')
+                if(!bc.items) {
+            	    //TODO still a branch problem here
+                    oc("new-app --name=mobile-deposit-ui --code='.' --image-stream=jboss-webserver30-tomcat8-openshift")
+                    wait('app=mobile-deposit-ui', 7, 'MINUTES')
+                    oc('expose service mobile-deposit-ui')
+                } else {
+                    oc("start-build mobile-deposit-ui --from-dir=. --$OS_BUILD_LOG")
+                }
             }
         }
     }
     checkpoint 'deploy[development]-complete'
+}
 
-stage name:'deploy[test]', concurrency:1
-    mail to: 'apemberton@cloudbees.com', subject: "Deploy mobile-deposit-ui version #${env.BUILD_NUMBER} to test?",
-        body: "Deploy mobile-deposit-ui#${env.BUILD_NUMBER} to test and start functional tests? Approve or Reject on ${env.BUILD_URL}."
-    input "Deploy mobile-deposit-ui#${env.BUILD_NUMBER} to test?"
+milestone 2
+stage('deploy[test]') {
+    //only allow one deployment to test at a time
+    lock(resource: 'test-server', inversePrecedence: true) {
+        mail to: 'apemberton@cloudbees.com', subject: "Deploy mobile-deposit-ui version #${env.BUILD_NUMBER} to test?",
+            body: "Deploy mobile-deposit-ui#${env.BUILD_NUMBER} to test and start functional tests? Approve or Reject on ${env.BUILD_URL}."
+        input "Deploy mobile-deposit-ui#${env.BUILD_NUMBER} to test?"
     
-    node{
-        wrap([$class: 'OpenShiftBuildWrapper', url: OS_URL, credentialsId: OS_CREDS_TEST, installation: 'oc-latest', insecure: true]) {
-            def project = oc('project mobile-development -q')
-            def is = oc('get is -o json')
-            def image = is?.items[0].metadata.name
+        node{
+            wrap([$class: 'OpenShiftBuildWrapper', url: OS_URL, credentialsId: OS_CREDS_TEST, installation: 'oc-latest', insecure: true]) {
+                def project = oc('project mobile-development -q')
+                def is = oc('get is -o json')
+                def image = is?.items[0].metadata.name
             
-            oc("tag $image:latest $image:test")
+                oc("tag $image:latest $image:test")
 
-            project = oc('project mobile-test -q')
-            def dc = oc('get dc -o json')
-            if(!dc.items){
-                oc("new-app mobile-development/$image:test")
-                wait('app=mobile-deposit-ui', 7, 'MINUTES')
-                oc('expose service mobile-deposit-ui')
-            }
+                project = oc('project mobile-test -q')
+                def dc = oc('get dc -o json')
+                if(!dc.items){
+                    oc("new-app mobile-development/$image:test")
+                    wait('app=mobile-deposit-ui', 7, 'MINUTES')
+                    oc('expose service mobile-deposit-ui')
+                }
             
-            sleep time: 120, unit: 'SECONDS' //give JBoss another minute to start; probably better ways to validate
+                sleep time: 120, unit: 'SECONDS' //give JBoss another minute to start; probably better ways to validate
+            }
         }
     }
+}
     
-stage 'test[functional]'
+stage('test[functional]') {
     node {
         unstash 'source'
         withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: SAUCE_CREDS, 
@@ -100,29 +113,35 @@ stage 'test[functional]'
         
     }
     checkpoint 'test[functional]-complete'
-    
-stage name:'deploy[production]', concurrency:1
-    mail to: 'apemberton@cloudbees.com', subject: "Deploy mobile-deposit-ui version #${env.BUILD_NUMBER} to production?",
-        body: "Deploy mobile-deposit-ui#${env.BUILD_NUMBER} to production? Approve or Reject on ${env.BUILD_URL}."
-    input "Deploy mobile-deposit-ui#${env.BUILD_NUMBER} to production?"
-    
-    node{
-        wrap([$class: 'OpenShiftBuildWrapper', url: OS_URL, credentialsId: OS_CREDS_PROD, installation: 'oc-latest', insecure: true]) {
-            def project = oc('project mobile-development -q')
-            def is = oc('get is -o json')
-            def image = is?.items[0]?.metadata.name
-            
-            oc("tag $image:test $image:production")
+}
 
-            project = oc('project mobile-production -q')
-            def dc = oc('get dc -o json')
-            if(!dc.items){
-                oc("new-app mobile-development/$image:production")
-                wait('app=mobile-deposit-ui', 7, 'MINUTES')
-                oc('expose service mobile-deposit-ui')
+milestone 3
+stage('deploy[production]') {
+    //only allow one deployment to production at a time
+    lock(resource: 'production-server', inversePrecedence: true) {
+        mail to: 'apemberton@cloudbees.com', subject: "Deploy mobile-deposit-ui version #${env.BUILD_NUMBER} to production?",
+            body: "Deploy mobile-deposit-ui#${env.BUILD_NUMBER} to production? Approve or Reject on ${env.BUILD_URL}."
+        input "Deploy mobile-deposit-ui#${env.BUILD_NUMBER} to production?"
+    
+        node{
+            wrap([$class: 'OpenShiftBuildWrapper', url: OS_URL, credentialsId: OS_CREDS_PROD, installation: 'oc-latest', insecure: true]) {
+                def project = oc('project mobile-development -q')
+                def is = oc('get is -o json')
+                def image = is?.items[0]?.metadata.name
+            
+                oc("tag $image:test $image:production")
+
+                project = oc('project mobile-production -q')
+                def dc = oc('get dc -o json')
+                if(!dc.items){
+                    oc("new-app mobile-development/$image:production")
+                    wait('app=mobile-deposit-ui', 7, 'MINUTES')
+                    oc('expose service mobile-deposit-ui')
+                }
             }
         }
     }
+}
 
 /**
 * Execute OpenShift v3 'oc' CLI commands, sending output to Jenkins log console and returned 
@@ -133,12 +152,10 @@ stage name:'deploy[production]', concurrency:1
 def oc(cmd){
     def output
     sh "set -o pipefail"
-    sh "oc $cmd 2>&1 | tee output.jenkins"
-    output = readFile 'output.jenkins'
+    output = sh returnStdout: true, script: "oc $cmd"
     if(output.startsWith('{')){
-        output = new JsonSlurper().parseText(output)
+        output = new JsonSlurperClassic().parseText(output)
     }
-    sh "rm output.jenkins"
     return output
 }
 
